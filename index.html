@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Text Encriptor and Decriptor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      text-align: center;
+    }
+
+    .info-label {
+      text-align: center;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+    }
+
+    .panel-header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .panel-content {
+      padding: 15px;
+      display: none;
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .output {
+      margin-top: 10px;
+      padding: 10px;
+      background: #e9ecef;
+      border-radius: 4px;
+      word-wrap: break-word;
+    }
+
+    .btn-group {
+      margin-top: 10px;
+    }
+
+    .btn-group button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Text Encriptor and Decriptor</h1>
+    <p class="info-label">note: this tool uses AES Algorithm to dicript and encrypt the text.</p>
+    <h2>Encriptor and Decriptor</h2>
+
+    <!-- Encryptor Panel -->
+    <div class="panel">
+      <div class="panel-header" onclick="togglePanel('encryptor-content')">Encryptor</div>
+      <div class="panel-content" id="encryptor-content">
+        <label>Input your key here:</label>
+        <input type="text" id="encrypt-key" placeholder="Enter encryption key"/>
+
+        <label>Enter or paste your text here:</label>
+        <textarea id="encrypt-input" rows="5" placeholder="Enter text to encrypt..."></textarea>
+
+        <button onclick="encryptText()">Encrypt</button>
+
+        <div id="encrypt-output" class="output" style="display:none;"></div>
+
+        <div class="btn-group" id="encrypt-tools" style="display:none;">
+          <button onclick="copyOutput('encrypt-output')">Copy</button>
+          <button onclick="downloadOutput('encrypt-output', 'encrypted.txt')">Download</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decryptor Panel -->
+    <div class="panel">
+      <div class="panel-header" onclick="togglePanel('decryptor-content')">Decryptor</div>
+      <div class="panel-content" id="decryptor-content">
+        <label>Input your key here:</label>
+        <input type="text" id="decrypt-key" placeholder="Enter decryption key"/>
+
+        <label>Enter or paste your text here:</label>
+        <textarea id="decrypt-input" rows="5" placeholder="Enter text to decrypt..."></textarea>
+
+        <button onclick="decryptText()">Decrypt</button>
+
+        <div id="decrypt-output" class="output" style="display:none;"></div>
+
+        <div class="btn-group" id="decrypt-tools" style="display:none;">
+          <button onclick="copyOutput('decrypt-output')">Copy</button>
+          <button onclick="downloadOutput('decrypt-output', 'decrypted.txt')">Download</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function togglePanel(id) {
+      const content = document.getElementById(id);
+      content.style.display = content.style.display === "block" ? "none" : "block";
+    }
+
+    function encryptText() {
+      const key = document.getElementById("encrypt-key").value;
+      const text = document.getElementById("encrypt-input").value;
+
+      if (!key || !text) {
+        alert("Please enter both key and text to encrypt.");
+        return;
+      }
+
+      try {
+        const encrypted = CryptoJS.AES.encrypt(text, key).toString();
+        document.getElementById("encrypt-output").style.display = "block";
+        document.getElementById("encrypt-output").innerText = encrypted;
+        document.getElementById("encrypt-tools").style.display = "block";
+      } catch (e) {
+        alert("Encryption failed: " + e.message);
+      }
+    }
+
+    function decryptText() {
+      const key = document.getElementById("decrypt-key").value;
+      const ciphertext = document.getElementById("decrypt-input").value;
+
+      if (!key || !ciphertext) {
+        alert("Please enter both key and encrypted text.");
+        return;
+      }
+
+      try {
+        const decrypted = CryptoJS.AES.decrypt(ciphertext, key);
+        const plain = decrypted.toString(CryptoJS.enc.Utf8);
+        if (!plain) throw new Error("Invalid key or text.");
+        document.getElementById("decrypt-output").style.display = "block";
+        document.getElementById("decrypt-output").innerText = plain;
+        document.getElementById("decrypt-tools").style.display = "block";
+      } catch (e) {
+        alert("Decryption failed: " + e.message);
+      }
+    }
+
+    function copyOutput(id) {
+      const output = document.getElementById(id);
+      navigator.clipboard.writeText(output.innerText).then(() => {
+        alert("Copied to clipboard.");
+      }, err => {
+        alert("Failed to copy: " + err);
+      });
+    }
+
+    function downloadOutput(id, filename) {
+      const text = document.getElementById(id).innerText;
+      const blob = new Blob([text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
